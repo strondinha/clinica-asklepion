@@ -38,6 +38,7 @@ Sistema web para agendamento de consultas de uma clínica única.
 
 ## Docker Compose (app + db)
 ```bash
+export JWT_SECRET="troque-esta-chave"
 docker compose up --build
 ```
 

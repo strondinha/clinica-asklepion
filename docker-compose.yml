@@ -21,7 +21,7 @@ services:
       - db
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/asklepion?schema=public
-      JWT_SECRET: super-secret-change-me
+      JWT_SECRET: ${JWT_SECRET}
       NODE_ENV: development
     ports:
       - "3000:3000"
