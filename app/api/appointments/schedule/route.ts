@@ -21,8 +21,14 @@ export async function POST(request: Request) {
 
   const [year, month, day] = date.split("-").map(Number);
   const [hour, minute] = time.split(":").map(Number);
+  const hasInvalidDatePart = [year, month, day, hour, minute].some((part) => Number.isNaN(part));
 
-  const startsAt = new Date(year, (month ?? 1) - 1, day ?? 1, hour ?? 0, minute ?? 0, 0, 0);
+  if (hasInvalidDatePart) {
+    searchParams.set("error", "invalid_date");
+    return NextResponse.redirect(new URL(`/agendar?${searchParams.toString()}`, request.url));
+  }
+
+  const startsAt = new Date(year, month - 1, day, hour, minute, 0, 0);
 
   if (Number.isNaN(startsAt.getTime())) {
     searchParams.set("error", "invalid_date");
