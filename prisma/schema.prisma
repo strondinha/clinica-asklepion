@@ -1,0 +1,75 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  PATIENT
+  ADMIN
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CANCELED
+}
+
+model User {
+  id           String        @id @default(cuid())
+  name         String
+  cpf          String        @unique
+  passwordHash String
+  role         Role          @default(PATIENT)
+  createdAt    DateTime      @default(now())
+  appointments Appointment[]
+}
+
+model Specialty {
+  id      String   @id @default(cuid())
+  name    String   @unique
+  doctors Doctor[]
+}
+
+model Doctor {
+  id             String               @id @default(cuid())
+  name           String
+  specialtyId    String
+  room           String
+  avatarUrl      String?
+  specialty      Specialty            @relation(fields: [specialtyId], references: [id], onDelete: Restrict)
+  availabilities DoctorAvailability[]
+  appointments   Appointment[]
+}
+
+model DoctorAvailability {
+  id       String @id @default(cuid())
+  doctorId String
+  weekday  Int
+  time     String
+  doctor   Doctor @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  @@unique([doctorId, weekday, time])
+}
+
+model Appointment {
+  id        String            @id @default(cuid())
+  patientId String
+  doctorId  String
+  startsAt  DateTime
+  status    AppointmentStatus @default(SCHEDULED)
+  createdAt DateTime          @default(now())
+  patient   User              @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctor    Doctor            @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  @@index([doctorId, startsAt])
+  @@index([patientId, startsAt])
+}

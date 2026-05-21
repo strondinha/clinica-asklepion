@@ -1,0 +1,31 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: asklepion-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: asklepion
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: asklepion-app
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/asklepion?schema=public
+      JWT_SECRET: ${JWT_SECRET}
+      NODE_ENV: development
+    ports:
+      - "3000:3000"
+    command: sh -c "npm install && npx prisma migrate deploy && npm run prisma:seed && npm run dev"
+
+volumes:
+  postgres_data:
