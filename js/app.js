@@ -113,7 +113,7 @@
       doctorList.appendChild(
         createDoctorCard(
           doctor,
-          () => setState({ doctorId: doctor.id, day: null, time: null, clientName: '' }),
+          () => setState({ doctorId: doctor.id, day: null, time: null }),
           selected
         )
       );
@@ -137,7 +137,7 @@
       chip.type = 'button';
       chip.className = `chip${bookingState.day === day ? ' selected' : ''}`;
       chip.textContent = day;
-      chip.addEventListener('click', () => setState({ day, time: null, clientName: '' }));
+      chip.addEventListener('click', () => setState({ day, time: null }));
       dayList.appendChild(chip);
     });
   }
@@ -155,7 +155,7 @@
       chip.type = 'button';
       chip.className = `chip${bookingState.time === time ? ' selected' : ''}`;
       chip.textContent = time;
-      chip.addEventListener('click', () => setState({ time, clientName: '' }));
+      chip.addEventListener('click', () => setState({ time }));
       timeList.appendChild(chip);
     });
   }
@@ -236,7 +236,12 @@
   clientForm.addEventListener('submit', (event) => {
     event.preventDefault();
     const clientName = clientNameInput.value.trim();
-    if (!clientName) return;
+    if (!clientName) {
+      clientNameInput.setCustomValidity('Informe seu nome completo para confirmar o agendamento.');
+      clientNameInput.reportValidity();
+      return;
+    }
+    clientNameInput.setCustomValidity('');
     setState({ clientName });
   });
 
