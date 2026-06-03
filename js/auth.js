@@ -5,7 +5,8 @@
     appointments: 'appointments'
   };
 
-  // Dados mock apenas para execução local estática; em produção use backend e hash de senha.
+  // Dados mock apenas para execução local estática.
+  // Nunca use senha em texto plano em produção: use backend seguro e hash (bcrypt/argon2).
   const seedUsers = [
     {
       cpf: '12345678901',
@@ -207,8 +208,12 @@
 
   function addAppointment(appointment) {
     const appointments = getAppointments();
+    const appointmentId =
+      typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : `apt-${Date.now()}-${Math.random().toString(16).slice(2)}`;
     const item = {
-      id: `apt-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      id: appointmentId,
       ...appointment,
       createdAt: new Date().toISOString()
     };
