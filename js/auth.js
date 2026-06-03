@@ -2,7 +2,8 @@
   const STORAGE_KEYS = {
     authUser: 'auth_user',
     users: 'auth_users',
-    appointments: 'appointments'
+    appointments: 'appointments',
+    appointmentCounter: 'appointments_counter'
   };
 
   // Dados mock apenas para execução local estática.
@@ -71,6 +72,13 @@
 
   function writeStorage(key, value) {
     localStorage.setItem(key, encodeValue(value));
+  }
+
+  function nextAppointmentCounter() {
+    const current = Number(readStorage(STORAGE_KEYS.appointmentCounter, 0)) || 0;
+    const next = current + 1;
+    writeStorage(STORAGE_KEYS.appointmentCounter, next);
+    return next;
   }
 
   function parseArrayStorage(key) {
@@ -216,7 +224,7 @@
     const appointmentId =
       typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
         ? crypto.randomUUID()
-        : `apt-${Date.now()}-${appointments.length + 1}`;
+        : `apt-${Date.now()}-${nextAppointmentCounter()}`;
     const item = {
       id: appointmentId,
       ...appointment,
