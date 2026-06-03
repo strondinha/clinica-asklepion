@@ -184,6 +184,9 @@
     if (senha.length < 8) {
       return { ok: false, message: 'A senha deve ter pelo menos 8 caracteres.' };
     }
+    if (!/[A-Za-z]/.test(senha) || !/\d/.test(senha)) {
+      return { ok: false, message: 'A senha deve conter letras e números.' };
+    }
 
     const users = getUsers();
     if (users.some((user) => user.cpf === cpf)) {
@@ -211,7 +214,7 @@
     const appointmentId =
       typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
         ? crypto.randomUUID()
-        : `apt-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+        : `apt-${Date.now()}-${appointments.length + 1}`;
     const item = {
       id: appointmentId,
       ...appointment,
