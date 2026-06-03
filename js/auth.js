@@ -5,16 +5,17 @@
     appointments: 'appointments'
   };
 
+  // Dados mock apenas para execução local estática; em produção use backend e hash de senha.
   const seedUsers = [
     {
       cpf: '12345678901',
-      senha: '1234',
+      senha: 'paciente123',
       nome: 'João da Silva',
       tipo: 'paciente'
     },
     {
       cpf: '22233344455',
-      senha: 'med123',
+      senha: 'medico123',
       nome: 'Dra. Sara Rodrigues',
       tipo: 'medico',
       medicoId: 'sara-rodrigues',
@@ -23,7 +24,7 @@
     },
     {
       cpf: '99988877766',
-      senha: 'rec123',
+      senha: 'recepcao123',
       nome: 'Fernanda Souza',
       tipo: 'recepcao'
     }
@@ -41,13 +42,38 @@
       .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
   }
 
-  function parseArrayStorage(key) {
+  function encodeValue(value) {
+    const utf8 = encodeURIComponent(JSON.stringify(value));
+    return btoa(utf8);
+  }
+
+  function decodeValue(rawValue) {
+    const utf8 = atob(rawValue);
+    return JSON.parse(decodeURIComponent(utf8));
+  }
+
+  function readStorage(key, fallback) {
+    const rawValue = localStorage.getItem(key);
+    if (!rawValue) return fallback;
+
     try {
-      const stored = JSON.parse(localStorage.getItem(key) || '[]');
-      return Array.isArray(stored) ? stored : [];
+      return decodeValue(rawValue);
     } catch {
-      return [];
+      try {
+        return JSON.parse(rawValue);
+      } catch {
+        return fallback;
+      }
     }
+  }
+
+  function writeStorage(key, value) {
+    localStorage.setItem(key, encodeValue(value));
+  }
+
+  function parseArrayStorage(key) {
+    const stored = readStorage(key, []);
+    return Array.isArray(stored) ? stored : [];
   }
 
   function getRegisteredUsers() {
@@ -55,7 +81,7 @@
   }
 
   function saveRegisteredUsers(users) {
-    localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
+    writeStorage(STORAGE_KEYS.users, users);
   }
 
   function getUsers() {
@@ -97,16 +123,12 @@
   }
 
   function setSession(user) {
-    localStorage.setItem(STORAGE_KEYS.authUser, JSON.stringify(user));
+    writeStorage(STORAGE_KEYS.authUser, user);
   }
 
   function getSession() {
-    try {
-      const user = JSON.parse(localStorage.getItem(STORAGE_KEYS.authUser) || 'null');
-      return user && user.cpf ? user : null;
-    } catch {
-      return null;
-    }
+    const user = readStorage(STORAGE_KEYS.authUser, null);
+    return user && user.cpf ? user : null;
   }
 
   function clearSession() {
@@ -158,8 +180,8 @@
       return { ok: false, message: 'Informe um CPF válido com 11 dígitos.' };
     }
 
-    if (senha.length < 4) {
-      return { ok: false, message: 'A senha deve ter pelo menos 4 caracteres.' };
+    if (senha.length < 8) {
+      return { ok: false, message: 'A senha deve ter pelo menos 8 caracteres.' };
     }
 
     const users = getUsers();
@@ -180,7 +202,7 @@
   }
 
   function saveAppointments(appointments) {
-    localStorage.setItem(STORAGE_KEYS.appointments, JSON.stringify(appointments));
+    writeStorage(STORAGE_KEYS.appointments, appointments);
   }
 
   function addAppointment(appointment) {

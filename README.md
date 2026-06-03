@@ -26,9 +26,11 @@ Não há backend nem dependências externas.
 
 ## Usuários mock para teste
 
-- Paciente: `123.456.789-01` / `1234`
-- Médico: `222.333.444-55` / `med123`
-- Recepção: `999.888.777-66` / `rec123`
+- Paciente: `123.456.789-01` / `paciente123`
+- Médico: `222.333.444-55` / `medico123`
+- Recepção: `999.888.777-66` / `recepcao123`
+
+> Credenciais acima são apenas para demonstração local (mock), sem uso em produção.
 
 ## Fluxos
 
