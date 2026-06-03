@@ -1,38 +1,29 @@
-# Clínica Asklepion (Front-end)
+# Clínica Asklepion
 
-Projeto simples (HTML/CSS/JS) para simular um sistema de clínica com **cadastro, login e dashboard**, usando `localStorage`.
+Front-end estático recriado do zero em **HTML, CSS e JavaScript puro**, com foco no fluxo de **agendamento de consulta**.
 
-## Como rodar
+## Estrutura
 
-### Opção 1 — Abrir direto no navegador
-1. Baixe/clonar o repositório.
-2. Abra o arquivo `index.html` no navegador.
+- `index.html`
+- `css/styles.css`
+- `js/app.js`
+- `assets/`
 
-> Observação: algumas funções que dependem de URLs/rotas funcionam melhor com servidor local.
+## Como executar
 
-### Opção 2 — Servidor local (recomendado)
-Você pode usar qualquer servidor estático. Exemplos:
+1. Clone ou baixe o repositório.
+2. Abra o arquivo `index.html` diretamente no navegador.
 
-- Com Node:
-  ```bash
-  npx serve
-  ```
+Não há backend nem dependências externas.
 
-- Com Python:
-  ```bash
-  python -m http.server 8000
-  ```
+## Fluxo implementado
 
-Depois acesse no navegador o endereço exibido.
+1. **Lista de médicos**: seleção por card com nome e especialidade.
+2. **Detalhe do médico**: nome, especialidade, frase de orientação e dias disponíveis.
+3. **Escolha de horário**: horários filtrados pelo dia selecionado.
+4. **Dados do cliente**: preenchimento de nome completo.
+5. **Confirmação**: resumo do agendamento com médico, especialidade, dia, hora e nome do cliente.
 
-## Funcionalidades
-- Seleção de perfil: **Paciente / Médico / Recepcionista**
-- Cadastro e login por perfil (armazenado no `localStorage`)
-- Dashboard com abas
-- **Sessão persistente** (mantém login após recarregar)
-- **Logout**
+## Dados mockados
 
-## Dados
-Os dados ficam no `localStorage` do seu navegador.
-- Usuários: `usuariosAsklepion`
-- Sessão: `asklepionSession`
+Os médicos e disponibilidades são definidos em `js/app.js` (3 profissionais) e o estado do fluxo é persistido em `localStorage`.
