@@ -44,6 +44,7 @@
   }
 
   function encodeValue(value) {
+    // Base64 é apenas ofuscação para demo local; não é criptografia de segurança.
     const utf8 = encodeURIComponent(JSON.stringify(value));
     return btoa(utf8);
   }
@@ -110,6 +111,7 @@
 
   function authenticate(cpf, senha, selectedRole) {
     const normalizedCpf = normalizeCpf(cpf);
+    // Comparação em texto plano é somente para mock local; em produção use hash seguro no backend.
     const user = getUsers().find((item) => item.cpf === normalizedCpf && item.senha === senha);
 
     if (!user) {

@@ -30,7 +30,7 @@ Não há backend nem dependências externas.
 - Médico: `222.333.444-55` / `medico123`
 - Recepção: `999.888.777-66` / `recepcao123`
 
-> Credenciais acima são apenas para demonstração local (mock), sem uso em produção.
+> Credenciais acima são apenas para demonstração local (mock), sem uso em produção e nunca devem ser usadas em ambientes expostos (incluindo staging público).
 
 ## Fluxos
 
