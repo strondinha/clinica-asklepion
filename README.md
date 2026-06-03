@@ -1,29 +1,42 @@
 # Clínica Asklepion
 
-Front-end estático recriado do zero em **HTML, CSS e JavaScript puro**, com foco no fluxo de **agendamento de consulta**.
+Front-end estático em **HTML, CSS e JavaScript puro**, com autenticação mock, perfis por tipo de usuário e fluxo de agendamento integrado ao paciente logado.
 
 ## Estrutura
 
-- `index.html`
+- `login.html` (acesso com tabs Paciente/Equipe)
+- `cadastro.html` (cadastro mínimo de paciente)
+- `index.html` (dashboard do paciente)
+- `medico.html` (dashboard médico)
+- `equipe.html` (dashboard recepção/equipe)
 - `css/styles.css`
+- `js/auth.js`
+- `js/login.js`
+- `js/cadastro.js`
 - `js/app.js`
-- `assets/`
+- `js/medico.js`
+- `js/equipe.js`
 
 ## Como executar
 
 1. Clone ou baixe o repositório.
-2. Abra o arquivo `index.html` diretamente no navegador.
+2. Abra o arquivo `login.html` diretamente no navegador.
 
 Não há backend nem dependências externas.
 
-## Fluxo implementado
+## Usuários mock para teste
 
-1. **Lista de médicos**: seleção por card com nome e especialidade.
-2. **Detalhe do médico**: nome, especialidade, frase de orientação e dias disponíveis.
-3. **Escolha de horário**: horários filtrados pelo dia selecionado.
-4. **Dados do cliente**: preenchimento de nome completo.
-5. **Confirmação**: resumo do agendamento com médico, especialidade, dia, hora e nome do cliente.
+- Paciente: `123.456.789-01` / `1234`
+- Médico: `222.333.444-55` / `med123`
+- Recepção: `999.888.777-66` / `rec123`
 
-## Dados mockados
+## Fluxos
 
-Os médicos e disponibilidades são definidos em `js/app.js` (3 profissionais) e o estado do fluxo é persistido em `localStorage`.
+- **Login e sessão**: valida CPF, senha e tipo selecionado (Paciente/Equipe) e persiste sessão em `localStorage` (`auth_user`).
+- **Proteção de páginas**: dashboards internos redirecionam para login quando não há sessão.
+- **Direcionamento por perfil**:
+  - paciente → `index.html`
+  - médico → `medico.html`
+  - recepção/equipe → `equipe.html`
+- **Agendamento**: no dashboard do paciente, consultas confirmadas são salvas em `localStorage` (`appointments`) vinculadas ao CPF do paciente.
+- **Minhas Consultas**: lista apenas consultas do paciente logado.

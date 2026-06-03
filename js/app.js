@@ -1,5 +1,7 @@
 (() => {
-  const STORAGE_KEY = 'asklepion-booking-state-v1';
+  const auth = window.AsklepionAuth;
+  const user = auth.requireAuth(['paciente']);
+  if (!user) return;
 
   const doctors = [
     {
@@ -21,7 +23,7 @@
       disponibilidade: {
         'Terça-feira': ['08:30', '10:30', '15:00'],
         'Quinta-feira': ['09:00', '11:00', '17:00'],
-        'Sábado': ['08:00', '09:00']
+        Sábado: ['08:00', '09:00']
       }
     },
     {
@@ -39,8 +41,9 @@
 
   const tabs = document.querySelectorAll('.tab');
   const panels = document.querySelectorAll('.panel');
+  const welcomeText = document.getElementById('welcomeText');
+  const logoutBtn = document.getElementById('logoutBtn');
 
-  const goToBookingBtn = document.getElementById('goToBooking');
   const doctorList = document.getElementById('doctorList');
   const doctorShowcase = document.getElementById('doctorShowcase');
 
@@ -52,39 +55,20 @@
   const selectedDayText = document.getElementById('selectedDayText');
   const timeList = document.getElementById('timeList');
 
-  const clientCard = document.getElementById('clientCard');
-  const clientForm = document.getElementById('clientForm');
-  const clientNameInput = document.getElementById('clientName');
+  const confirmCard = document.getElementById('confirmCard');
+  const bookingSummary = document.getElementById('bookingSummary');
+  const confirmBookingBtn = document.getElementById('confirmBookingBtn');
 
+  const myAppointments = document.getElementById('myAppointments');
   const confirmationCard = document.getElementById('confirmationCard');
 
   const defaultState = {
     doctorId: null,
     day: null,
-    time: null,
-    clientName: ''
+    time: null
   };
 
-  let bookingState = loadState();
-
-  function loadState() {
-    try {
-      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-      return { ...defaultState, ...stored };
-    } catch {
-      return { ...defaultState };
-    }
-  }
-
-  function saveState() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(bookingState));
-  }
-
-  function setState(patch) {
-    bookingState = { ...bookingState, ...patch };
-    saveState();
-    renderFlow();
-  }
+  let bookingState = { ...defaultState };
 
   function setActivePanel(targetId) {
     tabs.forEach((tab) => tab.classList.toggle('active', tab.dataset.target === targetId));
@@ -99,7 +83,13 @@
     const button = document.createElement('button');
     button.type = 'button';
     button.className = `doctor-card${selected ? ' selected' : ''}`;
-    button.innerHTML = `<strong>${doctor.nome}</strong><p>${doctor.especialidade}</p>`;
+
+    const title = document.createElement('strong');
+    title.textContent = doctor.nome;
+    const specialty = document.createElement('p');
+    specialty.textContent = doctor.especialidade;
+
+    button.append(title, specialty);
     button.addEventListener('click', onClick);
     return button;
   }
@@ -111,21 +101,25 @@
     doctors.forEach((doctor) => {
       const selected = doctor.id === bookingState.doctorId;
       doctorList.appendChild(
-        createDoctorCard(
-          doctor,
-          () => setState({ doctorId: doctor.id, day: null, time: null }),
-          selected
-        )
+        createDoctorCard(doctor, () => {
+          bookingState = { ...bookingState, doctorId: doctor.id, day: null, time: null };
+          renderFlow();
+        }, selected)
       );
 
-      const showCard = document.createElement('article');
-      showCard.className = 'doctor-card';
-      showCard.innerHTML = `
-        <strong>${doctor.nome}</strong>
-        <p>${doctor.especialidade}</p>
-        <p class="hint">Dias: ${Object.keys(doctor.disponibilidade).join(', ')}</p>
-      `;
-      doctorShowcase.appendChild(showCard);
+      const showcaseCard = document.createElement('article');
+      showcaseCard.className = 'doctor-card';
+
+      const name = document.createElement('strong');
+      name.textContent = doctor.nome;
+      const specialty = document.createElement('p');
+      specialty.textContent = doctor.especialidade;
+      const days = document.createElement('p');
+      days.className = 'hint';
+      days.textContent = `Dias: ${Object.keys(doctor.disponibilidade).join(', ')}`;
+
+      showcaseCard.append(name, specialty, days);
+      doctorShowcase.appendChild(showcaseCard);
     });
   }
 
@@ -137,7 +131,10 @@
       chip.type = 'button';
       chip.className = `chip${bookingState.day === day ? ' selected' : ''}`;
       chip.textContent = day;
-      chip.addEventListener('click', () => setState({ day, time: null }));
+      chip.addEventListener('click', () => {
+        bookingState = { ...bookingState, day, time: null };
+        renderFlow();
+      });
       dayList.appendChild(chip);
     });
   }
@@ -155,34 +152,93 @@
       chip.type = 'button';
       chip.className = `chip${bookingState.time === time ? ' selected' : ''}`;
       chip.textContent = time;
-      chip.addEventListener('click', () => setState({ time }));
+      chip.addEventListener('click', () => {
+        bookingState = { ...bookingState, time };
+        renderFlow();
+      });
       timeList.appendChild(chip);
     });
   }
 
-  function renderConfirmation(doctor) {
-    if (!bookingState.clientName.trim() || !doctor || !bookingState.day || !bookingState.time) {
-      confirmationCard.classList.add('hidden');
-      confirmationCard.innerHTML = '';
+  function renderMyAppointments() {
+    myAppointments.innerHTML = '';
+    const items = auth
+      .getAppointments()
+      .filter((appointment) => appointment.pacienteCpf === user.cpf)
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    if (items.length === 0) {
+      const empty = document.createElement('p');
+      empty.className = 'hint';
+      empty.textContent = 'Você ainda não possui consultas agendadas.';
+      myAppointments.appendChild(empty);
       return;
     }
 
-    confirmationCard.classList.remove('hidden');
-    confirmationCard.innerHTML = `
-      <h2>Agendamento confirmado!</h2>
-      <p><strong>Cliente:</strong> ${bookingState.clientName}</p>
-      <p><strong>Médico:</strong> ${doctor.nome}</p>
-      <p><strong>Especialidade:</strong> ${doctor.especialidade}</p>
-      <p><strong>Dia:</strong> ${bookingState.day}</p>
-      <p><strong>Horário:</strong> ${bookingState.time}</p>
-      <button id="newBookingBtn" class="btn" type="button">Novo agendamento</button>
-    `;
+    items.forEach((appointment) => {
+      const card = document.createElement('article');
+      card.className = 'appointment-item';
 
-    const newBookingBtn = document.getElementById('newBookingBtn');
-    newBookingBtn.addEventListener('click', () => {
-      setState({ ...defaultState });
-      setActivePanel('agendamento');
+      const title = document.createElement('strong');
+      title.textContent = `${appointment.medicoNome} • ${appointment.especialidade}`;
+      const details = document.createElement('p');
+      details.className = 'hint';
+      details.textContent = `${appointment.day} às ${appointment.time}`;
+
+      card.append(title, details);
+      myAppointments.appendChild(card);
     });
+  }
+
+  function showConfirmation(appointment) {
+    confirmationCard.classList.remove('hidden');
+    confirmationCard.innerHTML = '';
+
+    const title = document.createElement('h2');
+    title.textContent = 'Agendamento confirmado!';
+    const client = document.createElement('p');
+    client.textContent = `Paciente: ${appointment.pacienteNome}`;
+    const doctor = document.createElement('p');
+    doctor.textContent = `Médico: ${appointment.medicoNome}`;
+    const specialty = document.createElement('p');
+    specialty.textContent = `Especialidade: ${appointment.especialidade}`;
+    const schedule = document.createElement('p');
+    schedule.textContent = `${appointment.day} às ${appointment.time}`;
+
+    const resetButton = document.createElement('button');
+    resetButton.id = 'newBookingBtn';
+    resetButton.className = 'btn';
+    resetButton.type = 'button';
+    resetButton.textContent = 'Novo agendamento';
+    resetButton.addEventListener('click', () => {
+      bookingState = { ...defaultState };
+      confirmationCard.classList.add('hidden');
+      setActivePanel('agendamento');
+      renderFlow();
+    });
+
+    confirmationCard.append(title, client, doctor, specialty, schedule, resetButton);
+  }
+
+  function confirmBooking() {
+    const selectedDoctor = doctorById(bookingState.doctorId);
+    if (!selectedDoctor || !bookingState.day || !bookingState.time) {
+      return;
+    }
+
+    const appointment = auth.addAppointment({
+      pacienteCpf: user.cpf,
+      pacienteNome: user.nome,
+      medicoId: selectedDoctor.id,
+      medicoNome: selectedDoctor.nome,
+      especialidade: selectedDoctor.especialidade,
+      day: bookingState.day,
+      time: bookingState.time
+    });
+
+    showConfirmation(appointment);
+    renderMyAppointments();
+    setActivePanel('minhas-consultas');
   }
 
   function renderFlow() {
@@ -193,23 +249,29 @@
     if (!selectedDoctor) {
       doctorDetailsCard.classList.add('hidden');
       timeCard.classList.add('hidden');
-      clientCard.classList.add('hidden');
-      renderConfirmation(null);
+      confirmCard.classList.add('hidden');
       return;
     }
 
     doctorDetailsCard.classList.remove('hidden');
-    doctorDetails.innerHTML = `
-      <p><strong>${selectedDoctor.nome}</strong></p>
-      <p>${selectedDoctor.especialidade}</p>
-      <p class="hint">${selectedDoctor.descricao}</p>
-    `;
+    doctorDetails.innerHTML = '';
+
+    const name = document.createElement('p');
+    const nameStrong = document.createElement('strong');
+    nameStrong.textContent = selectedDoctor.nome;
+    name.appendChild(nameStrong);
+    const specialty = document.createElement('p');
+    specialty.textContent = selectedDoctor.especialidade;
+    const description = document.createElement('p');
+    description.className = 'hint';
+    description.textContent = selectedDoctor.descricao;
+
+    doctorDetails.append(name, specialty, description);
     renderDays(selectedDoctor);
 
     if (!bookingState.day) {
       timeCard.classList.add('hidden');
-      clientCard.classList.add('hidden');
-      renderConfirmation(null);
+      confirmCard.classList.add('hidden');
       return;
     }
 
@@ -217,33 +279,27 @@
     renderTimes(selectedDoctor);
 
     if (!bookingState.time) {
-      clientCard.classList.add('hidden');
-      renderConfirmation(null);
+      confirmCard.classList.add('hidden');
       return;
     }
 
-    clientCard.classList.remove('hidden');
-    clientNameInput.value = bookingState.clientName || '';
-    renderConfirmation(selectedDoctor);
+    confirmCard.classList.remove('hidden');
+    bookingSummary.textContent = `${user.nome}, confirme sua consulta com ${selectedDoctor.nome} em ${bookingState.day}, às ${bookingState.time}.`;
   }
+
+  welcomeText.textContent = `Olá, ${user.nome}`;
 
   tabs.forEach((tab) => {
     tab.addEventListener('click', () => setActivePanel(tab.dataset.target));
   });
 
-  goToBookingBtn.addEventListener('click', () => setActivePanel('agendamento'));
+  confirmBookingBtn.addEventListener('click', confirmBooking);
 
-  clientForm.addEventListener('submit', (event) => {
-    event.preventDefault();
-    const clientName = clientNameInput.value.trim();
-    if (!clientName) {
-      clientNameInput.setCustomValidity('Informe seu nome completo para confirmar o agendamento.');
-      clientNameInput.reportValidity();
-      return;
-    }
-    clientNameInput.setCustomValidity('');
-    setState({ clientName });
+  logoutBtn.addEventListener('click', () => {
+    auth.clearSession();
+    window.location.href = 'login.html';
   });
 
+  renderMyAppointments();
   renderFlow();
 })();
